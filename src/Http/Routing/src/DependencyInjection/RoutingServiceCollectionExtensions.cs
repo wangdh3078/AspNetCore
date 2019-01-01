@@ -86,6 +86,7 @@ namespace Microsoft.Extensions.DependencyInjection
             //
             services.TryAddSingleton<EndpointSelector, DefaultEndpointSelector>();
             services.TryAddEnumerable(ServiceDescriptor.Singleton<MatcherPolicy, HttpMethodMatcherPolicy>());
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<MatcherPolicy, HostMatcherPolicy>());
 
             //
             // Misc infrastructure
