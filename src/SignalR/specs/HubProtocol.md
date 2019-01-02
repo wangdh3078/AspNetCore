@@ -184,6 +184,20 @@ public void NonBlocking(string caller)
 {
     _callers.Add(caller);
 }
+
+public async Task<int> AddStream(ChannelReader<int> stream)
+{
+    int sum = 0;
+    while (await stream.WaitToReadAsync())
+    {
+        while (stream.TryRead(out var item))
+        {
+            sum += item;
+        }
+    }
+
+    return sum;
+}
 ```
 
 In each of the below examples, lines starting `C->S` indicate messages sent from the Caller ("Client") to the Callee ("Server"), and lines starting `S->C` indicate messages sent from the Callee ("Server") back to the Caller ("Client"). Message syntax is just a pseudo-code and is not intended to match any particular encoding.
@@ -273,6 +287,17 @@ S->C: Completion { Id = 42 } // This can be ignored
 C->S: Invocation { Target = "NonBlocking", Arguments = [ "foo" ] }
 ```
 
+### Stream from Client to Server (`AddStream` example above)
+
+```
+C->S: Invocation { Id = 42, Target = "AddStream", Arguments = [ ], StreamIds = [ 1 ] }
+C->S: StreamItem { Id = 1, Item = 1 }
+C->S: StreamItem { Id = 1, Item = 2 }
+C->S: StreamItem { Id = 1, Item = 3 }
+C->S: Completion { Id = 1 }
+S->C: Completion { Id = 42, Result = 6 }
+```
+
 ### Ping
 
 ```
@@ -293,6 +318,7 @@ An `Invocation` message is a JSON object with the following properties:
 * `invocationId` - An optional `String` encoding the `Invocation ID` for a message.
 * `target` - A `String` encoding the `Target` name, as expected by the Callee's Binder
 * `arguments` - An `Array` containing arguments to apply to the method referred to in Target. This is a sequence of JSON `Token`s, encoded as indicated below in the "JSON Payload Encoding" section
+* `streamIds` - An optional `Array` of strings representing unique ids for streams coming from the Caller to the Callee and being consumed by the method referred to in Target.
 
 Example:
 
@@ -320,6 +346,22 @@ Example (Non-Blocking):
 }
 ```
 
+Example (Invocation with stream from Caller):
+
+```json
+{
+    "type": 1,
+    "invocationId": "123",
+    "target": "Send",
+    "arguments": [
+        42
+    ],
+    "streamIds": [
+        "1"
+    ]
+}
+```
+
 ### StreamInvocation Message Encoding
 
 A `StreamInvocation` message is a JSON object with the following properties:
@@ -328,6 +370,7 @@ A `StreamInvocation` message is a JSON object with the following properties:
 * `invocationId` - A `String` encoding the `Invocation ID` for a message.
 * `target` - A `String` encoding the `Target` name, as expected by the Callee's Binder.
 * `arguments` - An `Array` containing arguments to apply to the method referred to in Target. This is a sequence of JSON `Token`s, encoded as indicated below in the "JSON Payload Encoding" section.
+* `streamIds` - An optional `Array` of strings representing unique ids for streams coming from the Caller to the Callee and being consumed by the method referred to in Target.
 
 Example:
 
@@ -494,7 +537,7 @@ MessagePack uses different formats to encode values. Refer to the [MsgPack forma
 `Invocation` messages have the following structure:
 
 ```
-[1, Headers, InvocationId, NonBlocking, Target, [Arguments]]
+[1, Headers, InvocationId, NonBlocking, Target, [Arguments], [StreamIds]]
 ```
 
 * `1` - Message Type - `1` indicates this is an `Invocation` message.
@@ -504,18 +547,19 @@ MessagePack uses different formats to encode values. Refer to the [MsgPack forma
   * A `String` encoding the Invocation ID for the message.
 * Target - A `String` encoding the Target name, as expected by the Callee's Binder.
 * Arguments - An Array containing arguments to apply to the method referred to in Target.
+* StreamIds - An `Array` of strings representing unique ids for streams coming from the Caller to the Callee and being consumed by the method referred to in Target.
 
 #### Example:
 
 The following payload
 
 ```
-0x95 0x01 0x80 0xa3 0x78 0x79 0x7a 0xa6 0x6d 0x65 0x74 0x68 0x6f 0x64 0x91 0x2a
+0x96 0x01 0x80 0xa3 0x78 0x79 0x7a 0xa6 0x6d 0x65 0x74 0x68 0x6f 0x64 0x91 0x2a 0x90
 ```
 
 is decoded as follows:
 
-* `0x95` - 5-element array
+* `0x96` - 6-element array
 * `0x01` - `1` (Message Type - `Invocation` message)
 * `0x80` - Map of length 0 (Headers)
 * `0xa3` - string of length 3 (InvocationId)
@@ -531,17 +575,18 @@ is decoded as follows:
 * `0x64` - `d`
 * `0x91` - 1-element array (Arguments)
 * `0x2a` - `42` (Argument value)
+* `0x90` - 0-element array (StreamIds)
 
 #### Non-Blocking Example:
 
 The following payload
 ```
-0x95 0x01 0x80 0xc0 0xa6 0x6d 0x65 0x74 0x68 0x6f 0x64 0x91 0x2a
+0x96 0x01 0x80 0xc0 0xa6 0x6d 0x65 0x74 0x68 0x6f 0x64 0x91 0x2a 0x90
 ```
 
 is decoded as follows:
 
-* `0x95` - 5-element array
+* `0x96` - 6-element array
 * `0x01` - `1` (Message Type - `Invocation` message)
 * `0x80` - Map of length 0 (Headers)
 * `0xc0` - `nil` (Invocation ID)
@@ -554,13 +599,14 @@ is decoded as follows:
 * `0x64` - `d`
 * `0x91` - 1-element array (Arguments)
 * `0x2a` - `42` (Argument value)
+* `0x90` - 0-element array (StreamIds)
 
 ### StreamInvocation Message Encoding
 
 `StreamInvocation` messages have the following structure:
 
 ```
-[4, Headers, InvocationId, Target, [Arguments]]
+[4, Headers, InvocationId, Target, [Arguments], [StreamIds]]
 ```
 
 * `4` - Message Type - `4` indicates this is a `StreamInvocation` message.
@@ -568,18 +614,19 @@ is decoded as follows:
 * InvocationId - A `String` encoding the Invocation ID for the message.
 * Target - A `String` encoding the Target name, as expected by the Callee's Binder.
 * Arguments - An Array containing arguments to apply to the method referred to in Target.
+* StreamIds - An `Array` of strings representing unique ids for streams coming from the Caller to the Callee and being consumed by the method referred to in Target.
 
 Example:
 
 The following payload
 
 ```
-0x95 0x04 0x80 0xa3 0x78 0x79 0x7a 0xa6 0x6d 0x65 0x74 0x68 0x6f 0x64 0x91 0x2a
+0x96 0x04 0x80 0xa3 0x78 0x79 0x7a 0xa6 0x6d 0x65 0x74 0x68 0x6f 0x64 0x91 0x2a 0x90
 ```
 
 is decoded as follows:
 
-* `0x95` - 5-element array
+* `0x96` - 6-element array
 * `0x04` - `4` (Message Type - `StreamInvocation` message)
 * `0x80` - Map of length 0 (Headers)
 * `0xa3` - string of length 3 (InvocationId)
@@ -595,6 +642,7 @@ is decoded as follows:
 * `0x64` - `d`
 * `0x91` - 1-element array (Arguments)
 * `0x2a` - `42` (Argument value)
+* `0x90` - 0-element array (StreamIds)
 
 ### StreamItem Message Encoding
 
@@ -799,12 +847,12 @@ Headers are not valid in a Ping message. The Ping message is **always exactly en
 Below shows an example encoding of a message containing headers:
 
 ```
-0x95 0x01 0x82 0xa1 0x78 0xa1 0x79 0xa1 0x7a 0xa1 0x7a 0xa3 0x78 0x79 0x7a 0xa6 0x6d 0x65 0x74 0x68 0x6f 0x64 0x91 0x2a
+0x96 0x01 0x82 0xa1 0x78 0xa1 0x79 0xa1 0x7a 0xa1 0x7a 0xa3 0x78 0x79 0x7a 0xa6 0x6d 0x65 0x74 0x68 0x6f 0x64 0x91 0x2a 0x90
 ```
 
 and is decoded as follows:
 
-* `0x95` - 5-element array
+* `0x96` - 6-element array
 * `0x01` - `1` (Message Type - `Invocation` message)
 * `0x82` - Map of length 2
 * `0xa1` - string of length 1 (Key)
@@ -828,6 +876,7 @@ and is decoded as follows:
 * `0x64` - `d`
 * `0x91` - 1-element array (Arguments)
 * `0x2a` - `42` (Argument value)
+* `0x90` - 0-element array (StreamIds)
 
 and interpreted as an Invocation message with headers: `'x' = 'y'` and `'z' = 'z'`.
 
