@@ -101,6 +101,10 @@ On the Callee side, it is up to the Callee's Binder to determine if a method cal
 
 On the Caller side, the user code which performs the invocation indicates how it would like to receive the results and it is up the Caller's Binder to handle the result. If the Caller expects only a single result, but multiple results are returned, or if the caller expects multiple results but only one result is returned, the Caller's Binder should yield an error. If the Caller wants to stop receiving `StreamItem` messages before the Callee sends a `Completion` message, the Caller can send a `CancelInvocation` message with the same `Invocation ID` used for the `StreamInvocation` message that started the stream. When the Callee receives a `CancelInvocation` message it will stop sending `StreamItem` messages and will send a `Completion` message. The Caller is free to ignore any `StreamItem` messages as well as the `Completion` message after sending `CancelInvocation`.
 
+## Upload streaming
+
+The Caller can send streaming data to the Callee, they can begin such a process by making an `Invocation` or `StreamInvocation` and adding a "StreamIds" property with an array of IDs that will represent the stream(s) associated with the invocation. The IDs must be unique from any other stream IDs used by the same Caller. The Caller then sends `StreamItem` messages with the "InvocationId" property set to the ID for the stream they are sending over. The Caller ends the stream by sending a `Completion` message with the ID of the stream they are completing.
+
 ## Completion and results
 
 An Invocation is only considered completed when the `Completion` message is received. Receiving **any** message using the same `Invocation ID` after a `Completion` message has been received for that invocation is considered a protocol error and the recipient may immediately terminate the connection.
@@ -132,10 +136,6 @@ Keep alive behavior is achieved via the `Ping` message type. **Either endpoint**
 Ping messages do not have any payload, they are completely empty messages (aside from the encoding necessary to identify the message as a `Ping` message).
 
 The default ASP.NET Core implementation automatically pings both directions on active connections. These pings are at regular intervals, and allow detection of unexpected disconnects (for example, unplugging a server). If the client detects that the server has stopped pinging, the client will close the connection, and vice versa. If there's other traffic through the connection, keep-alive pings aren't needed. A `Ping` is only sent if the interval has elapsed without a message being sent.
-
-## Upload streaming
-
-Sometimes Callees will want to receive streaming data from Callers. The Caller can begin such a process by making an `Invocation` or `StreamInvocation` and adding a "StreamIds" property with an array of IDs. The IDs must be unique from any other stream IDs used by the same Caller. The Caller then sends `StreamItem` messages with the "InvocationId" property set to the ID for the stream they are sending over. The Caller ends the stream by sending a `Completion` message with the ID of the stream they are completing.
 
 ## Example
 

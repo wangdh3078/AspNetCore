@@ -298,6 +298,25 @@ namespace Microsoft.AspNetCore.SignalR.Internal
                                     ErrorMessageHelper.BuildErrorMessage($"An unexpected error occurred invoking '{hubMethodInvocationMessage.Target}' on the server.", ex, _enableDetailedErrors));
                                 return;
                             }
+                            finally
+                            {
+                                // Stream response handles cleanup in StreamResultsAsync
+                                // And normal invocations handle cleanup below in the finally
+                                if (isStreamCall)
+                                {
+                                    hubActivator?.Release(hub);
+                                    scope.Dispose();
+                                    foreach (var stream in hubMethodInvocationMessage.StreamIds)
+                                    {
+                                        try
+                                        {
+                                            connection.StreamTracker.Complete(CompletionMessage.Empty(stream));
+                                        }
+                                        // ignore failures, it means the client already completed the streams
+                                        catch { }
+                                    }
+                                }
+                            }
 
                             await connection.WriteAsync(CompletionMessage.WithResult(hubMethodInvocationMessage.InvocationId, result));
                         }
