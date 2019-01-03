@@ -12,7 +12,7 @@ namespace Microsoft.AspNetCore.Mvc.ViewFeatures
     {
         public static readonly NullView Instance = new NullView();
 
-        public string Path => string.Empty;
+        public string Path { get; }
 
         public Task RenderAsync(ViewContext context)
         {

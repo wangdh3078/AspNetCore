@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace Microsoft.AspNetCore.Mvc.Razor
 {
     /// <summary>
-    /// Specifies the contracts for a view location expander that is used by <see cref="RazorViewEngine"/> instances to
+    /// Specifies the contracts for a view location expander that is used by view engines instances to
     /// determine search paths for a view.
     /// </summary>
     /// <remarks>
@@ -24,7 +24,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
     public interface IViewLocationExpander
     {
         /// <summary>
-        /// Invoked by a <see cref="RazorViewEngine"/> to determine the values that would be consumed by this instance
+        /// Invoked by a view engines to determine the values that would be consumed by this instance
         /// of <see cref="IViewLocationExpander"/>. The calculated values are used to determine if the view location
         /// has changed since the last time it was located.
         /// </summary>
@@ -33,7 +33,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         void PopulateValues(ViewLocationExpanderContext context);
 
         /// <summary>
-        /// Invoked by a <see cref="RazorViewEngine"/> to determine potential locations for a view.
+        /// Invoked by view engines to determine potential locations for a view.
         /// </summary>
         /// <param name="context">The <see cref="ViewLocationExpanderContext"/> for the current view location
         /// expansion operation.</param>
