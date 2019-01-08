@@ -9,19 +9,33 @@ using System.Linq;
 namespace Microsoft.AspNetCore.Routing
 {
     /// <summary>
-    /// Represents host metadata used during routing.
+    /// Attribute for providing host metdata that is used during routing.
     /// </summary>
     [DebuggerDisplay("{DebuggerToString(),nq}")]
-    public class HostMetadata : IHostMetadata
+    public class HostAttribute : IHostMetadata
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="HostMetadata" /> class.
+        /// Initializes a new instance of the <see cref="HostAttribute" /> class.
+        /// </summary>
+        /// <param name="host">
+        /// The host used during routing.
+        /// </param>
+        public HostAttribute(string host) : this(new[] { host })
+        {
+            if (host == null)
+            {
+                throw new ArgumentNullException(nameof(host));
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HostAttribute" /> class.
         /// </summary>
         /// <param name="hosts">
         /// The hosts used during routing.
         /// An empty collection means any host will be accepted.
         /// </param>
-        public HostMetadata(IEnumerable<string> hosts)
+        public HostAttribute(IEnumerable<string> hosts)
         {
             if (hosts == null)
             {

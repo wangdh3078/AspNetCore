@@ -32,12 +32,12 @@ namespace Microsoft.AspNetCore.Routing.Matching
         }
 
         [Fact]
-        public void AppliesToEndpoints_EndpointWithoutContentTypes_ReturnsFalse()
+        public void AppliesToEndpoints_EndpointWithoutHosts_ReturnsFalse()
         {
             // Arrange
             var endpoints = new[]
             {
-                CreateEndpoint("/", new HostMetadata(Array.Empty<string>())),
+                CreateEndpoint("/", new HostAttribute(Array.Empty<string>())),
             };
 
             var policy = CreatePolicy();
@@ -50,13 +50,13 @@ namespace Microsoft.AspNetCore.Routing.Matching
         }
 
         [Fact]
-        public void AppliesToEndpoints_EndpointHasContentTypes_ReturnsTrue()
+        public void AppliesToEndpoints_EndpointHasHosts_ReturnsTrue()
         {
             // Arrange
             var endpoints = new[]
             {
-                CreateEndpoint("/", new HostMetadata(Array.Empty<string>())),
-                CreateEndpoint("/", new HostMetadata(new[] { "localhost", })),
+                CreateEndpoint("/", new HostAttribute(Array.Empty<string>())),
+                CreateEndpoint("/", new HostAttribute(new[] { "localhost", })),
             };
 
             var policy = CreatePolicy();
@@ -68,20 +68,41 @@ namespace Microsoft.AspNetCore.Routing.Matching
             Assert.True(result);
         }
 
+        [Theory]
+        [InlineData(":")]
+        [InlineData(":80")]
+        [InlineData("80:")]
+        [InlineData("")]
+        [InlineData("::")]
+        [InlineData("*:test")]
+        public void AppliesToEndpoints_InvalidHosts(string host)
+        {
+            // Arrange
+            var endpoints = new[] { CreateEndpoint("/", new HostAttribute(new[] { host })), };
+
+            var policy = CreatePolicy();
+
+            // Act & Assert
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                policy.AppliesToEndpoints(endpoints);
+            });
+        }
+
         [Fact]
-        public void GetEdges_GroupsByContentType()
+        public void GetEdges_GroupsByHost()
         {
             // Arrange
             var endpoints = new[]
             {
-                CreateEndpoint("/", new HostMetadata(new[] { "*:5000", "*:5001", })),
-                CreateEndpoint("/", new HostMetadata(Array.Empty<string>())),
+                CreateEndpoint("/", new HostAttribute(new[] { "*:5000", "*:5001", })),
+                CreateEndpoint("/", new HostAttribute(Array.Empty<string>())),
                 CreateEndpoint("/", hostMetadata: null),
-                CreateEndpoint("/", new HostMetadata(new[] { "*.contoso.com:*" })),
-                CreateEndpoint("/", new HostMetadata(new[] { "*.sub.contoso.com:*" })),
-                CreateEndpoint("/", new HostMetadata(new[] { "www.contoso.com:*", })),
-                CreateEndpoint("/", new HostMetadata(new[] { "www.contoso.com:5000", })),
-                CreateEndpoint("/", new HostMetadata(new[]{ "*:*", })),
+                CreateEndpoint("/", new HostAttribute("*.contoso.com:*")),
+                CreateEndpoint("/", new HostAttribute("*.sub.contoso.com:*")),
+                CreateEndpoint("/", new HostAttribute("www.contoso.com:*")),
+                CreateEndpoint("/", new HostAttribute("www.contoso.com:5000")),
+                CreateEndpoint("/", new HostAttribute("*:*")),
             };
 
             var policy = CreatePolicy();

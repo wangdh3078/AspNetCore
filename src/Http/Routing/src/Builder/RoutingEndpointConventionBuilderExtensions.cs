@@ -22,7 +22,7 @@ namespace Microsoft.AspNetCore.Builder
 
             builder.Add(endpointBuilder =>
             {
-                endpointBuilder.Metadata.Add(new HostMetadata(hosts));
+                endpointBuilder.Metadata.Add(new HostAttribute(hosts));
             });
             return builder;
         }

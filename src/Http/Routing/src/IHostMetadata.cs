@@ -10,6 +10,10 @@ namespace Microsoft.AspNetCore.Routing
     /// </summary>
     public interface IHostMetadata
     {
+        /// <summary>
+        /// Returns a read-only collection of hosts used during routing.
+        /// An empty collection means any host will be accepted.
+        /// </summary>
         IReadOnlyList<string> Hosts { get; }
     }
 }

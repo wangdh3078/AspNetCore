@@ -29,7 +29,7 @@ namespace Microsoft.AspNetCore.Routing
             var endpointModel = new RouteEndpointBuilder((context) => Task.CompletedTask, RoutePatternFactory.Parse("/"), 0);
             convention(endpointModel);
 
-            var hostMetadata = Assert.IsType<HostMetadata>(Assert.Single(endpointModel.Metadata));
+            var hostMetadata = Assert.IsType<HostAttribute>(Assert.Single(endpointModel.Metadata));
 
             Assert.Equal("contoso.com:8080", hostMetadata.Hosts.Single());
         }

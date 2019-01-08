@@ -149,7 +149,7 @@ namespace RoutingWebSite
 
             conventionBuilder.Add(endpointBuilder =>
             {
-                endpointBuilder.Metadata.Add(new HostMetadata(hosts));
+                endpointBuilder.Metadata.Add(new HostAttribute(hosts));
                 endpointBuilder.DisplayName += " HOST: " + hostsDisplay;
             });
 

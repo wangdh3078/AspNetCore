@@ -54,17 +54,23 @@ namespace Microsoft.AspNetCore.Routing.Matching
             var hostParts = host.Split(':');
             if (hostParts.Length == 1)
             {
-                return new EdgeKey(hostParts[0], null);
+                if (!string.IsNullOrEmpty(hostParts[0]))
+                {
+                    return new EdgeKey(hostParts[0], null);
+                }
             }
             if (hostParts.Length == 2)
             {
-                if (int.TryParse(hostParts[1], out var port))
+                if (!string.IsNullOrEmpty(hostParts[0]))
                 {
-                    return new EdgeKey(hostParts[0], port);
-                }
-                else if (string.Equals(hostParts[1], "*", StringComparison.Ordinal))
-                {
-                    return new EdgeKey(hostParts[0], null);
+                    if (int.TryParse(hostParts[1], out var port))
+                    {
+                        return new EdgeKey(hostParts[0], port);
+                    }
+                    else if (string.Equals(hostParts[1], "*", StringComparison.Ordinal))
+                    {
+                        return new EdgeKey(hostParts[0], null);
+                    }
                 }
             }
 
@@ -98,10 +104,10 @@ namespace Microsoft.AspNetCore.Routing.Matching
 
                 for (var j = 0; j < hosts.Length; j++)
                 {
-                    var contentType = hosts[j];
-                    if (!edges.ContainsKey(contentType))
+                    var host = hosts[j];
+                    if (!edges.ContainsKey(host))
                     {
-                        edges.Add(contentType, new List<Endpoint>());
+                        edges.Add(host, new List<Endpoint>());
                     }
                 }
             }
@@ -177,27 +183,27 @@ namespace Microsoft.AspNetCore.Routing.Matching
             // Higher score == lower priority.
             if (key.MatchesHost && !key.HasHostWildcard && key.MatchesPort)
             {
-                return 1; // Has host AND port
+                return 1; // Has host AND port, e.g. www.consoto.com:8080
             }
             else if (key.MatchesHost && !key.HasHostWildcard)
             {
-                return 2; // Has host
+                return 2; // Has host, e.g. www.consoto.com
             }
             else if (key.MatchesHost && key.MatchesPort)
             {
-                return 3; // Has wildcard host AND port
+                return 3; // Has wildcard host AND port, e.g. *.consoto.com:8080
             }
             else if (key.MatchesHost)
             {
-                return 4; // Has wildcard host
+                return 4; // Has wildcard host, e.g. *.consoto.com
             }
             else if (key.MatchesPort)
             {
-                return 5; // Has port
+                return 5; // Has port, e.g. *:8080
             }
             else
             {
-                return 6; // Has neither
+                return 6; // Has neither, e.g. *:* (or no metadata)
             }
         }
 
@@ -225,13 +231,31 @@ namespace Microsoft.AspNetCore.Routing.Matching
 
             public override int GetDestination(HttpContext httpContext)
             {
+                // HostString can allocate when accessing the host or port
+                // Store host and port locally and reuse
+                var requestHost = httpContext.Request.Host;
+                var host = requestHost.Host;
+                int? port;
+                if (requestHost.Port != null)
+                {
+                    port = requestHost.Port;
+                }
+                else if (httpContext.Request.IsHttps)
+                {
+                    port = 443;
+                }
+                else
+                {
+                    port = 80;
+                }
+
                 var destinations = _destinations;
                 for (var i = 0; i < destinations.Length; i++)
                 {
                     var destination = destinations[i];
 
-                    if ((!destination.host.MatchesPort || destination.host.Port == httpContext.Request.Host.Port) &&
-                        destination.host.MatchHost(httpContext.Request.Host.Host))
+                    if ((!destination.host.MatchesPort || destination.host.Port == port) &&
+                        destination.host.MatchHost(host))
                     {
                         return destination.destination;
                     }
