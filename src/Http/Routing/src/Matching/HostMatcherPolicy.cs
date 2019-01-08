@@ -235,19 +235,7 @@ namespace Microsoft.AspNetCore.Routing.Matching
                 // Store host and port locally and reuse
                 var requestHost = httpContext.Request.Host;
                 var host = requestHost.Host;
-                int? port;
-                if (requestHost.Port != null)
-                {
-                    port = requestHost.Port;
-                }
-                else if (httpContext.Request.IsHttps)
-                {
-                    port = 443;
-                }
-                else
-                {
-                    port = 80;
-                }
+                var port = ResolvePort(httpContext, requestHost);
 
                 var destinations = _destinations;
                 for (var i = 0; i < destinations.Length; i++)
@@ -262,6 +250,26 @@ namespace Microsoft.AspNetCore.Routing.Matching
                 }
 
                 return _exitDestination;
+            }
+
+            private static int? ResolvePort(HttpContext httpContext, HostString requestHost)
+            {
+                if (requestHost.Port != null)
+                {
+                    return requestHost.Port;
+                }
+                else if (string.Equals("https", httpContext.Request.Scheme, StringComparison.OrdinalIgnoreCase))
+                {
+                    return 443;
+                }
+                else if (string.Equals("http", httpContext.Request.Scheme, StringComparison.OrdinalIgnoreCase))
+                {
+                    return 80;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
