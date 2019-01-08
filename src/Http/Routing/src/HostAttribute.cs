@@ -19,6 +19,7 @@ namespace Microsoft.AspNetCore.Routing
         /// </summary>
         /// <param name="host">
         /// The host used during routing.
+        /// Host should be Unicode rather than punycode, and may have a port.
         /// </param>
         public HostAttribute(string host) : this(new[] { host })
         {
@@ -33,9 +34,10 @@ namespace Microsoft.AspNetCore.Routing
         /// </summary>
         /// <param name="hosts">
         /// The hosts used during routing.
+        /// Hosts should be Unicode rather than punycode, and may have a port.
         /// An empty collection means any host will be accepted.
         /// </param>
-        public HostAttribute(IEnumerable<string> hosts)
+        public HostAttribute(params string[] hosts)
         {
             if (hosts == null)
             {
@@ -47,6 +49,7 @@ namespace Microsoft.AspNetCore.Routing
 
         /// <summary>
         /// Returns a read-only collection of hosts used during routing.
+        /// Hosts will be Unicode rather than punycode, and may have a port.
         /// An empty collection means any host will be accepted.
         /// </summary>
         public IReadOnlyList<string> Hosts { get; }

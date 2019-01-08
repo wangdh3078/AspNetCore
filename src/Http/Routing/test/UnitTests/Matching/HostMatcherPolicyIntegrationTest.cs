@@ -48,6 +48,22 @@ namespace Microsoft.AspNetCore.Routing.Matching
         }
 
         [Fact]
+        public async Task Match_Host_Unicode()
+        {
+            // Arrange
+            var endpoint = CreateEndpoint("/hello", hosts: new string[] { "æon.contoso.com", });
+
+            var matcher = CreateMatcher(endpoint);
+            var (httpContext, context) = CreateContext("/hello", "æon.contoso.com");
+
+            // Act
+            await matcher.MatchAsync(httpContext, context);
+
+            // Assert
+            MatcherAssert.AssertMatch(context, httpContext, endpoint);
+        }
+
+        [Fact]
         public async Task Match_HostWithPort_IncorrectPort()
         {
             // Arrange
@@ -81,6 +97,22 @@ namespace Microsoft.AspNetCore.Routing.Matching
 
         [Fact]
         public async Task Match_HostWithWildcard()
+        {
+            // Arrange
+            var endpoint = CreateEndpoint("/hello", hosts: new string[] { "*.contoso.com:8080", });
+
+            var matcher = CreateMatcher(endpoint);
+            var (httpContext, context) = CreateContext("/hello", "æon.contoso.com:8080");
+
+            // Act
+            await matcher.MatchAsync(httpContext, context);
+
+            // Assert
+            MatcherAssert.AssertMatch(context, httpContext, endpoint);
+        }
+
+        [Fact]
+        public async Task Match_HostWithWildcard_Unicode()
         {
             // Arrange
             var endpoint = CreateEndpoint("/hello", hosts: new string[] { "*.contoso.com:8080", });
