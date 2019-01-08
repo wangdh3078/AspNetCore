@@ -144,6 +144,38 @@ namespace Microsoft.AspNetCore.Routing.Matching
         }
 
         [Fact]
+        public async Task Match_HostWithPort_NoHostHeader()
+        {
+            // Arrange
+            var endpoint = CreateEndpoint("/hello", hosts: new string[] { "contoso.com:443", });
+
+            var matcher = CreateMatcher(endpoint);
+            var (httpContext, context) = CreateContext("/hello", null, "https");
+
+            // Act
+            await matcher.MatchAsync(httpContext, context);
+
+            // Assert
+            MatcherAssert.AssertNotMatch(context, httpContext);
+        }
+
+        [Fact]
+        public async Task Match_Port_NoHostHeader_InferHttpsPort()
+        {
+            // Arrange
+            var endpoint = CreateEndpoint("/hello", hosts: new string[] { "*:443", });
+
+            var matcher = CreateMatcher(endpoint);
+            var (httpContext, context) = CreateContext("/hello", null, "https");
+
+            // Act
+            await matcher.MatchAsync(httpContext, context);
+
+            // Assert
+            MatcherAssert.AssertMatch(context, httpContext, endpoint);
+        }
+
+        [Fact]
         public async Task Match_NoMetadata_MatchesAnyHost()
         {
             // Arrange
@@ -230,7 +262,10 @@ namespace Microsoft.AspNetCore.Routing.Matching
             string scheme = null)
         {
             var httpContext = new DefaultHttpContext();
-            httpContext.Request.Host = new HostString(host);
+            if (host != null)
+            {
+                httpContext.Request.Host = new HostString(host);
+            }
             httpContext.Request.Path = path;
             httpContext.Request.Scheme = scheme;
 
