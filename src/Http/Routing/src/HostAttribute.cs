@@ -12,7 +12,8 @@ namespace Microsoft.AspNetCore.Routing
     /// Attribute for providing host metdata that is used during routing.
     /// </summary>
     [DebuggerDisplay("{DebuggerToString(),nq}")]
-    public class HostAttribute : IHostMetadata
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+    public sealed class HostAttribute : Attribute, IHostMetadata
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="HostAttribute" /> class.

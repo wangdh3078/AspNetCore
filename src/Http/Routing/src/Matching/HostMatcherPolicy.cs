@@ -8,7 +8,11 @@ using Microsoft.AspNetCore.Http;
 
 namespace Microsoft.AspNetCore.Routing.Matching
 {
-    public class HostMatcherPolicy : MatcherPolicy, IEndpointComparerPolicy, INodeBuilderPolicy
+    /// <summary>
+    /// An <see cref="MatcherPolicy"/> that implements filtering and selection by
+    /// the host header of a request.
+    /// </summary>
+    public sealed class HostMatcherPolicy : MatcherPolicy, IEndpointComparerPolicy, INodeBuilderPolicy
     {
         // Run after HTTP methods, but before 'default'.
         public override int Order { get; } = -100;
