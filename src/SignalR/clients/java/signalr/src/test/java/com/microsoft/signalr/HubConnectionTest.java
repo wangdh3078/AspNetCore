@@ -66,7 +66,7 @@ class HubConnectionTest {
     public void checkHubConnectionStateNoHandShakeResponse() {
         MockTransport mockTransport = new MockTransport(false);
         HubConnection hubConnection = HubConnectionBuilder.create("http://example.com")
-                .withTransport(mockTransport)
+                .withTransportImplementation(mockTransport)
                 .withHttpClient(new TestHttpClient())
                 .shouldSkipNegotiate(true)
                 .withHandshakeResponseTimeout(100)
@@ -1179,7 +1179,7 @@ class HubConnectionTest {
         MockTransport transport = new MockTransport(true);
         HubConnection hubConnection = HubConnectionBuilder
                 .create("http://example.com")
-                .withTransport(transport)
+                .withTransportImplementation(transport)
                 .withHttpClient(client)
                 .build();
 
@@ -1199,7 +1199,7 @@ class HubConnectionTest {
         HubConnection hubConnection = HubConnectionBuilder
                 .create("http://example.com")
                 .withHttpClient(client)
-                .withTransport(transport)
+                .withTransportImplementation(transport)
                 .build();
 
         RuntimeException exception = assertThrows(RuntimeException.class,
@@ -1218,7 +1218,7 @@ class HubConnectionTest {
         MockTransport transport = new MockTransport(true);
         HubConnection hubConnection = HubConnectionBuilder
                 .create("http://example.com")
-                .withTransport(transport)
+                .withTransportImplementation(transport)
                 .withHttpClient(client)
                 .build();
 
@@ -1241,7 +1241,7 @@ class HubConnectionTest {
         MockTransport transport = new MockTransport(true);
         HubConnection hubConnection = HubConnectionBuilder
                 .create("http://example.com")
-                .withTransport(transport)
+                .withTransportImplementation(transport)
                 .withHttpClient(client)
                 .withAccessTokenProvider(Single.just("secretToken"))
                 .build();
@@ -1266,7 +1266,7 @@ class HubConnectionTest {
         MockTransport transport = new MockTransport(true);
         HubConnection hubConnection = HubConnectionBuilder
                 .create("http://example.com")
-                .withTransport(transport)
+                .withTransportImplementation(transport)
                 .withHttpClient(client)
                 .withAccessTokenProvider(Single.just("secretToken"))
                 .build();
@@ -1326,7 +1326,7 @@ class HubConnectionTest {
 
         MockTransport transport = new MockTransport();
         HubConnection hubConnection = HubConnectionBuilder.create("http://example.com")
-                .withTransport(transport)
+                .withTransportImplementation(transport)
                 .withHttpClient(client)
                 .withHeader("ExampleHeader", "ExampleValue")
                 .build();
@@ -1351,7 +1351,7 @@ class HubConnectionTest {
 
         MockTransport transport = new MockTransport();
         HubConnection hubConnection = HubConnectionBuilder.create("http://example.com")
-                .withTransport(transport)
+                .withTransportImplementation(transport)
                 .withHttpClient(client)
                 .withHeader("ExampleHeader", "ExampleValue")
                 .withHeader("ExampleHeader", "New Value")
@@ -1368,7 +1368,7 @@ class HubConnectionTest {
         MockTransport transport = new MockTransport();
         HubConnection hubConnection = HubConnectionBuilder
                 .create("http://example.com")
-                .withTransport(transport)
+                .withTransportImplementation(transport)
                 .shouldSkipNegotiate(true)
                 .build();
 
@@ -1392,7 +1392,7 @@ class HubConnectionTest {
 
         HubConnection hubConnection = HubConnectionBuilder
                 .create("http://example.com")
-                .withTransport(mockTransport)
+                .withTransportImplementation(mockTransport)
                 .withHttpClient(client)
                 .build();
 
@@ -1415,7 +1415,7 @@ class HubConnectionTest {
         MockTransport transport = new MockTransport();
         HubConnection hubConnection = HubConnectionBuilder
                 .create("http://example.com")
-                .withTransport(transport)
+                .withTransportImplementation(transport)
                 .withHttpClient(client)
                 .build();
 
